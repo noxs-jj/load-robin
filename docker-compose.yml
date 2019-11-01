@@ -1,25 +1,41 @@
-version: ''
+version: '3.7'
 
 services:
   haproxy:
     image: haproxy:latest
-    port:
+    build: ./_docker/haproxy
+    ports:
       - 80:80
       - 443:443
-    networks:
-      - web
-    depend
+    depends_on:
+      - node-1
+      - node-2
 
-  node:
+  node-1:
     image: node:8.16.2-jessie
-    port:
-      - 3000
-    networks:
-      - web
+    command: cd /app ; npm -i && npm start
+    ports:
+      - 3001:3000
+    volumes:
+      - $PWD/:/app
+    restart: always
+    environment:
+      - HOSTNAME=node-1
     deploy:
-      replicas: 2
+      replicas: 1
 
+  node-2:
+    image: node:8.16.2-jessie
+    command: cd /app ; npm -i && npm start
+    ports:
+      - 3002:3000
+    volumes:
+      - $PWD/:/app
+    restart: always
+    environment:
+      - HOSTNAME=node-2
+    deploy:
+      replicas: 1
 
 networks:
-  web:
-    drivers: overlay
+  overlay:
