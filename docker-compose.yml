@@ -1,0 +1,25 @@
+version: ''
+
+services:
+  haproxy:
+    image: haproxy:latest
+    port:
+      - 80:80
+      - 443:443
+    networks:
+      - web
+    depend
+
+  node:
+    image: node:8.16.2-jessie
+    port:
+      - 3000
+    networks:
+      - web
+    deploy:
+      replicas: 2
+
+
+networks:
+  web:
+    drivers: overlay
