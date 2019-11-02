@@ -3,23 +3,29 @@ version: '3.7'
 services:
   haproxy:
     image: haproxy:latest
-    build: ./_docker/haproxy
-    command: haproxy -f /app/_docker/haproxy/haproxy.cfg
+    command: >
+      /bin/sh -c "cp -f /app/_docker/haproxy/haproxy.cfg /usr/local/etc/haproxy/haproxy.cfg && \
+                  haproxy -f /usr/local/etc/haproxy/haproxy.cfg"
     ports:
-      - "80"
+      - 80:80
+      - 8070:70
     volumes:
       - $PWD:/app
     depends_on:
       - node-1
       - node-2
+    links:
+      - node-1
+      - node-2
     networks:
       backend:
+        ipv4_address: 172.24.0.10
 
   node-1:
     image: node:8.16.2-jessie
     entrypoint: /app/entrypoint.sh
-    ports:
-      - 3001:3000
+    expose:
+      - 3000
     volumes:
       - $PWD:/app
       - ./package.json:/package.json
@@ -34,8 +40,8 @@ services:
   node-2:
     image: node:8.16.2-jessie
     entrypoint: /app/entrypoint.sh
-    ports:
-      - 3002:3000
+    expose:
+      - 3000
     volumes:
       - $PWD:/app
       - ./package.json:/package.json
@@ -47,8 +53,26 @@ services:
       backend:
         ipv4_address: 172.24.0.12
 
+  node-3:
+    image: node:8.16.2-jessie
+    entrypoint: /app/entrypoint.sh
+    expose:
+      - 3000
+    volumes:
+      - $PWD:/app
+      - ./package.json:/package.json
+    restart: always
+    environment:
+      - HOSTNAME=node-3
+      - PATH=/usr/local/bin/node_modules/.bin:$PATH
+    networks:
+      backend:
+        ipv4_address: 172.24.0.13
+
 networks:
   backend:
+    driver: bridge
     ipam:
+      driver: default
       config:
         - subnet: 172.24.0.0/24
