@@ -1,15 +1,19 @@
 version: '3.7'
 
 services:
-  # haproxy:
-  #   image: haproxy:latest
-  #   build: ./_docker/haproxy
-  #   ports:
-  #     - 80:80
-  #     - 443:443
-  #   depends_on:
-  #     - node-1
-  #     - node-2
+  haproxy:
+    image: haproxy:latest
+    build: ./_docker/haproxy
+    command: haproxy -f /app/_docker/haproxy/haproxy.cfg
+    ports:
+      - "80"
+    volumes:
+      - $PWD:/app
+    depends_on:
+      - node-1
+      - node-2
+    networks:
+      backend:
 
   node-1:
     image: node:8.16.2-jessie
@@ -23,6 +27,9 @@ services:
     environment:
       - HOSTNAME=node-1
       - PATH=/usr/local/bin/node_modules/.bin:$PATH
+    networks:
+      backend:
+        ipv4_address: 172.24.0.11
 
   node-2:
     image: node:8.16.2-jessie
@@ -36,6 +43,12 @@ services:
     environment:
       - HOSTNAME=node-2
       - PATH=/usr/local/bin/node_modules/.bin:$PATH
+    networks:
+      backend:
+        ipv4_address: 172.24.0.12
 
 networks:
-  overlay:
+  backend:
+    ipam:
+      config:
+        - subnet: 172.24.0.0/24
