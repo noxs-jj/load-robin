@@ -1,25 +1,78 @@
-version: ''
+version: '3.7'
 
 services:
   haproxy:
     image: haproxy:latest
-    port:
+    command: >
+      /bin/sh -c "cp -f /app/_docker/haproxy/haproxy.cfg /usr/local/etc/haproxy/haproxy.cfg && \
+                  haproxy -f /usr/local/etc/haproxy/haproxy.cfg"
+    ports:
       - 80:80
-      - 443:443
+      - 8070:70
+    volumes:
+      - $PWD:/app
+    depends_on:
+      - node-1
+      - node-2
+    links:
+      - node-1
+      - node-2
     networks:
-      - web
-    depend
+      backend:
+        ipv4_address: 172.24.0.10
 
-  node:
+  node-1:
     image: node:8.16.2-jessie
-    port:
+    entrypoint: /app/entrypoint.sh
+    expose:
       - 3000
+    volumes:
+      - $PWD:/app
+      - ./package.json:/package.json
+    restart: always
+    environment:
+      - HOSTNAME=node-1
+      - PATH=/usr/local/bin/node_modules/.bin:$PATH
     networks:
-      - web
-    deploy:
-      replicas: 2
+      backend:
+        ipv4_address: 172.24.0.11
 
+  node-2:
+    image: node:8.16.2-jessie
+    entrypoint: /app/entrypoint.sh
+    expose:
+      - 3000
+    volumes:
+      - $PWD:/app
+      - ./package.json:/package.json
+    restart: always
+    environment:
+      - HOSTNAME=node-2
+      - PATH=/usr/local/bin/node_modules/.bin:$PATH
+    networks:
+      backend:
+        ipv4_address: 172.24.0.12
+
+  node-3:
+    image: node:8.16.2-jessie
+    entrypoint: /app/entrypoint.sh
+    expose:
+      - 3000
+    volumes:
+      - $PWD:/app
+      - ./package.json:/package.json
+    restart: always
+    environment:
+      - HOSTNAME=node-3
+      - PATH=/usr/local/bin/node_modules/.bin:$PATH
+    networks:
+      backend:
+        ipv4_address: 172.24.0.13
 
 networks:
-  web:
-    drivers: overlay
+  backend:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.24.0.0/24
