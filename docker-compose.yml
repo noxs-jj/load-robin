@@ -1,41 +1,41 @@
 version: '3.7'
 
 services:
-  haproxy:
-    image: haproxy:latest
-    build: ./_docker/haproxy
-    ports:
-      - 80:80
-      - 443:443
-    depends_on:
-      - node-1
-      - node-2
+  # haproxy:
+  #   image: haproxy:latest
+  #   build: ./_docker/haproxy
+  #   ports:
+  #     - 80:80
+  #     - 443:443
+  #   depends_on:
+  #     - node-1
+  #     - node-2
 
   node-1:
     image: node:8.16.2-jessie
-    command: cd /app ; npm -i && npm start
+    entrypoint: /app/entrypoint.sh
     ports:
       - 3001:3000
     volumes:
-      - $PWD/:/app
+      - $PWD:/app
+      - ./package.json:/package.json
     restart: always
     environment:
       - HOSTNAME=node-1
-    deploy:
-      replicas: 1
+      - PATH=/usr/local/bin/node_modules/.bin:$PATH
 
   node-2:
     image: node:8.16.2-jessie
-    command: cd /app ; npm -i && npm start
+    entrypoint: /app/entrypoint.sh
     ports:
       - 3002:3000
     volumes:
-      - $PWD/:/app
+      - $PWD:/app
+      - ./package.json:/package.json
     restart: always
     environment:
       - HOSTNAME=node-2
-    deploy:
-      replicas: 1
+      - PATH=/usr/local/bin/node_modules/.bin:$PATH
 
 networks:
   overlay:
